@@ -11,6 +11,8 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
+question_context = "Genera 10 preguntas (en formato json {'tipo_pregunta':'multiple_respuesta|verdadero_o_falso|respuesta_unica', 'pregunta':'pregunta generada', 'opciones':'opciones posibles enumeradas de la forma a, b, c, d', 'respuesta_correcta':'la letra respuesta correcta'} basadas en el siguiente contexto: "
+
 long_questions = "En este contexto, se te proporcionará un tema específico junto con una descripción detallada del mismo. A partir de esta información, se generarán preguntas de desarrollo que requerirán respuestas extensas y bien fundamentadas. El objetivo es evaluar y reforzar tu comprensión en profundidad del tema, así como fomentar habilidades analíticas y de pensamiento crítico en la materia. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
 short_questions = "Este contexto se centra en presentarte un tema y su descripción, a partir de los cuales se generarán preguntas breves que demandarán respuestas concisas y directas. Estas preguntas están diseñadas para evaluar tu conocimiento básico y retener información clave del tema estudiado, permitiéndote practicar la síntesis y la precisión al responder. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
 test_questions = "En este tercer contexto, recibirás un tema acompañado de su descripción, y se generarán preguntas tipo test con cuatro opciones de respuesta. Algunas preguntas permitirán múltiples respuestas correctas, mientras que otras admitirán solamente una. Estas preguntas de opción múltiple tienen como objetivo evaluar tu habilidad para identificar información correcta y relevante del tema, y poner a prueba tu comprensión general de la materia de manera más rápida y eficiente. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
@@ -32,9 +34,9 @@ def guardar_datos(data, archivo="data.json"):
 
 
 def generar_preguntas(contexto, tipo_pregunta):
-    global short_questions, long_questions, test_questions
+    global short_questions, long_questions, test_questions, question_context
 
-    prompt = f"Genera 10 {tipo_pregunta} basadas en el siguiente contexto: {contexto}"
+    prompt = question_context + contexto
 
     messages = [
         {"role": "system", "content": short_questions if tipo_pregunta ==
@@ -150,10 +152,31 @@ def obtener_descripcion_tema(asignatura, tema, datos):
     return None
 
 
+def realizar_preguntas_test(preguntas):
+    respuestas_correctas = 0
+    total_preguntas = len(preguntas)
+
+    for i, pregunta in enumerate(preguntas):
+        print(f"\nPregunta {i + 1} de {total_preguntas}:")
+        print(pregunta["pregunta"])
+        print(pregunta["opciones"])
+
+        respuesta_usuario = input("\nIntroduce tu respuesta: ")
+
+        if respuesta_usuario.lower() == pregunta["respuesta_correcta"].lower():
+            respuestas_correctas += 1
+            print("¡Respuesta correcta!")
+        else:
+            print(
+                f"Respuesta incorrecta. La respuesta correcta es: {pregunta['respuesta_correcta']}")
+
+    print(
+        f"\nHas respondido correctamente {respuestas_correctas} de {total_preguntas} preguntas.")
+
+
 def main():
     global datos
     datos = cargar_datos()
-    print(datos)
 
     while True:
         # Menú principal: seleccionar asignatura o agregar contenido
@@ -184,6 +207,8 @@ def main():
             print(
                 f"\nHas seleccionado la asignatura '{asignatura_seleccionada}', el tema '{tema_seleccionado}' y el tipo de preguntas '{tipo_pregunta_seleccionado}'. ¡Buena suerte estudiando!")
             print(preguntas)
+
+            realizar_preguntas_test(preguntas)
 
 
 if __name__ == "__main__":
