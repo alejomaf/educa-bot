@@ -11,9 +11,9 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key = api_key
 
-long_questions = "En este contexto, se te proporcionará un tema específico junto con una descripción detallada del mismo. A partir de esta información, se generarán preguntas de desarrollo que requerirán respuestas extensas y bien fundamentadas. El objetivo es evaluar y reforzar tu comprensión en profundidad del tema, así como fomentar habilidades analíticas y de pensamiento crítico en la materia."
-short_questions = "Este contexto se centra en presentarte un tema y su descripción, a partir de los cuales se generarán preguntas breves que demandarán respuestas concisas y directas. Estas preguntas están diseñadas para evaluar tu conocimiento básico y retener información clave del tema estudiado, permitiéndote practicar la síntesis y la precisión al responder."
-test_questions = "En este tercer contexto, recibirás un tema acompañado de su descripción, y se generarán preguntas tipo test con cuatro opciones de respuesta. Algunas preguntas permitirán múltiples respuestas correctas, mientras que otras admitirán solamente una. Estas preguntas de opción múltiple tienen como objetivo evaluar tu habilidad para identificar información correcta y relevante del tema, y poner a prueba tu comprensión general de la materia de manera más rápida y eficiente."
+long_questions = "En este contexto, se te proporcionará un tema específico junto con una descripción detallada del mismo. A partir de esta información, se generarán preguntas de desarrollo que requerirán respuestas extensas y bien fundamentadas. El objetivo es evaluar y reforzar tu comprensión en profundidad del tema, así como fomentar habilidades analíticas y de pensamiento crítico en la materia. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
+short_questions = "Este contexto se centra en presentarte un tema y su descripción, a partir de los cuales se generarán preguntas breves que demandarán respuestas concisas y directas. Estas preguntas están diseñadas para evaluar tu conocimiento básico y retener información clave del tema estudiado, permitiéndote practicar la síntesis y la precisión al responder. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
+test_questions = "En este tercer contexto, recibirás un tema acompañado de su descripción, y se generarán preguntas tipo test con cuatro opciones de respuesta. Algunas preguntas permitirán múltiples respuestas correctas, mientras que otras admitirán solamente una. Estas preguntas de opción múltiple tienen como objetivo evaluar tu habilidad para identificar información correcta y relevante del tema, y poner a prueba tu comprensión general de la materia de manera más rápida y eficiente. Que el formato de las preguntas sea: [{pregunta:respuesta},{pregunta:respuesta}]"
 
 asignaturas = {}
 
@@ -31,90 +31,30 @@ def guardar_datos(data, archivo="data.json"):
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
-def generate_text(chapter, prompt, add_context=True, model="gpt-3.5-turbo", max_tokens=1000):
-    global project_context
-    messages = [{"role": "system", "content": project_context},
-                {"role": "user", "content": prompt}]
+def generar_preguntas(contexto, tipo_pregunta):
+    global short_questions, long_questions, test_questions
 
-    content_generated = False
+    prompt = f"Genera 10 {tipo_pregunta} basadas en el siguiente contexto: {contexto}"
 
-    while not content_generated:
-        try:
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                n=1,
-                stop=None,
-                temperature=0.4,  # this is the degree of randomness of the model's output
-            )
-            content_generated = True
-        except:
-            print("Error en la generación del capítulo, volviendo a intentar...")
-
-    chapter_generated = response.choices[0].message["content"]
-    if add_context:
-        project_context += "\n" + summarize_chapter(chapter, prompt)
-    # project_context += "\n" + chapter_generated
-    print(project_context)
-    return chapter_generated
-
-
-def summarize_chapter(chapter, prompt, model="gpt-3.5-turbo", max_tokens=700):
-    global project_context
     messages = [
-        {"role": "system", "content": project_context},
-        {"role": "user", "content": "Haz un resumen de este capítulo de menos de 60 palabras: " + prompt}]
+        {"role": "system", "content": short_questions if tipo_pregunta ==
+            "Preguntas cortas" else long_questions if tipo_pregunta == "Preguntas largas" else test_questions},
+        {"role": "user", "content": prompt}
+    ]
 
-    content_generated = False
-
-    while not content_generated:
-        try:
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                n=1,
-                stop=None,
-                temperature=0,  # this is the degree of randomness of the model's output
-            )
-            content_generated = True
-        except:
-            print("Error en la generación del resumen, volviendo a intentar...")
-
-    return "Resumen de "+chapter+" "+response.choices[0].message["content"]
-
-
-def initialize_gpt_context(title, model="gpt-3.5-turbo", max_tokens=700):
-    global project_context
-    global indice
-    messages = [
-        {"role": "user", "content": "Elabora un guión y un resumen de 100 palabras para desarrollar un proyecto que trate de: " + title}]
     response = openai.ChatCompletion.create(
-        model=model,
+        model="gpt-3.5-turbo",
         messages=messages,
-        max_tokens=max_tokens,
+        max_tokens=1000,
         n=1,
         stop=None,
-        temperature=0.2,  # this is the degree of randomness of the model's output
+        temperature=0.8,
     )
-    project_context += "\n El proyecto trata de " + \
-        response.choices[0].message["content"]
 
-    messages = [
-        {"role": "user", "content": "Elabora un índice para desarrollar un un proyecto que trate de: '" + title + "' proyecta ese índice en formato json de la siguiente forma [\{nombre_del_capitulo_1: [subapartado_1, subapartado2...]\},\{nombre_del_capitulo_2: [subapartado_1, subapartado2...]\}...]"}]
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        max_tokens=max_tokens,
-        n=1,
-        stop=None,
-        temperature=0,  # this is the degree of randomness of the model's output
-    )
-    indice = json.loads(response.choices[0].message["content"])
-
-    print(project_context)
-    print(indice)
+    preguntas_json = response.choices[0].message["content"]
+    print(preguntas_json)
+    preguntas = json.loads(preguntas_json)
+    return preguntas
 
 
 def mostrar_menu(opciones, titulo):
@@ -191,6 +131,25 @@ def menu_agregar(data):
             agregar_tema(data, asignatura_seleccionada)
 
 
+def menu_tipo_pregunta():
+    print("\n--- Selecciona el tipo de preguntas ---")
+    tipos_pregunta = ["Preguntas largas",
+                      "Preguntas cortas", "Preguntas tipo test"]
+    mostrar_menu(tipos_pregunta, "Tipos de preguntas")
+    tipo_seleccionado = seleccionar_opcion(tipos_pregunta)
+    if tipo_seleccionado == 0:
+        return None
+    return tipos_pregunta[tipo_seleccionado - 1]
+
+
+def obtener_descripcion_tema(asignatura, tema, datos):
+    temas = datos[asignatura]
+    for t in temas:
+        if tema in t:
+            return t[tema]
+    return None
+
+
 def main():
     global datos
     datos = cargar_datos()
@@ -199,7 +158,6 @@ def main():
     while True:
         # Menú principal: seleccionar asignatura o agregar contenido
         asignatura_seleccionada = menu_principal(datos)
-
         if not asignatura_seleccionada:
             menu_agregar(datos)
             guardar_datos(datos)  # Guardar datos actualizados en el archivo
@@ -211,8 +169,21 @@ def main():
             if not tema_seleccionado:
                 break
 
+            # Menú tipo de preguntas: seleccionar tipo
+            tipo_pregunta_seleccionado = menu_tipo_pregunta()
+            if not tipo_pregunta_seleccionado:
+                break
+
+            contexto = "La asignatura es " + asignatura_seleccionada + ". El tema es " + tema_seleccionado + \
+                ". Que trata de: " + \
+                obtener_descripcion_tema(
+                    asignatura_seleccionada, tema_seleccionado, datos)
+            preguntas = generar_preguntas(contexto, tipo_pregunta_seleccionado)
+
+            # Aquí, la variable "preguntas" contiene las preguntas y respuestas generadas en formato JSON
             print(
-                f"\nHas seleccionado la asignatura '{asignatura_seleccionada}' y el tema '{tema_seleccionado}'. ¡Buena suerte estudiando!")
+                f"\nHas seleccionado la asignatura '{asignatura_seleccionada}', el tema '{tema_seleccionado}' y el tipo de preguntas '{tipo_pregunta_seleccionado}'. ¡Buena suerte estudiando!")
+            print(preguntas)
 
 
 if __name__ == "__main__":
