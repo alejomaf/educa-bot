@@ -1,0 +1,21 @@
+{
+    "Matemáticas": [
+        {
+            "Álgebra": "El álgebra es una rama de las matemáticas que estudia las estructuras, las relaciones y las cantidades. Se ocupa de símbolos y las reglas para manipular estos símbolos. Es un unificador de la mayoría de las matemáticas y abarca desde resolver ecuaciones elementales hasta estudiar abstracciones como los espacios vectoriales y los módulos."
+        },
+        {
+            "Cálculo": "El cálculo es una rama de las matemáticas centrada en el estudio de funciones, derivadas, integrales y límites. El cálculo es una herramienta fundamental en ciencia, ingeniería y matemáticas aplicadas, ya que proporciona un marco para modelar sistemas que cambian y ayuda a analizar esos sistemas."
+        }
+    ],
+    "Biología": [
+        {
+            "Genética": "La genética es el estudio de los genes, la herencia genética y la variación en los organismos vivos. Es una rama de la biología que busca comprender cómo los rasgos y características son transmitidos de una generación a otra y cómo estos rasgos influyen en el desarrollo y función del organismo."
+        },
+        {
+            "Ecología": "La ecología es la rama de la biología que estudia las interacciones entre los organismos y su entorno, incluyendo cómo los organismos afectan el medio ambiente y cómo el medio ambiente afecta a los organismos. La ecología es fundamental para comprender y abordar problemas ambientales como la pérdida de biodiversidad y el cambio climático."
+        },
+        {
+            "Aves": "Este tema consiste en las aves que vuelan por el mundo uiiii"
+        }
+    ]
+}
